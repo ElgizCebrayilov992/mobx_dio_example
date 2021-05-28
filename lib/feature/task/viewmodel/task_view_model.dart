@@ -1,20 +1,47 @@
+import 'package:flutter/cupertino.dart';
 import 'package:mobx/mobx.dart';
+import 'package:mobx_dio_example/core/network/network_manager.dart';
+import 'package:mobx_dio_example/feature/task/model/task_model.dart';
+import 'package:mobx_dio_example/feature/task/service/ITaskService.dart';
+import 'package:mobx_dio_example/feature/task/service/task_service.dart';
 part 'task_view_model.g.dart';
 
 class TaskViewModel = _TaskViewModelBase with _$TaskViewModel;
 
 abstract class _TaskViewModelBase with Store 
 {
+BuildContext? context;
+late ITaskService taskService;
 
-@computed  //observable-e gore bir is edeceyemse bunu yaziriq
-bool get isOdd=>count.isOdd;
+@observable
+List<TaskModel> items=[];
 
-@observable //deyisdirmek istediyimiz deyerin basina bunu yaziriq
-int count=0;
+@observable
+LifeState pageLifes=LifeState.IDDLE;
 
-@action //metodun basina bunu yaziriq
-void onIncrementCount() 
- {
-  count+=1;
+ void setContex(BuildContext? context){
+   this.context=context;
+   fetchItems();
  }
+
+_TaskViewModelBase({this.context}){
+  taskService=TaskService(NetWorkManager.inistance.dio);
+}
+
+@action
+Future<void> fetchItems() async {
+  pageLifes=LifeState.LOADING;
+items=await taskService.fetchAllTask();
+pageLifes=LifeState.DONE;
+  
+}
+
+
+
+}
+enum LifeState{
+  IDDLE,
+  LOADING,
+  DONE,
+
 }
